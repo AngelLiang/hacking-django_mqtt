@@ -24,7 +24,9 @@ MQTTTypes = [
     15
 ]
 
+# MQTT Client id 正则规则
 MQTT_CLIENT_ID_RE = re.compile('(?P<client>[0-9a-zA-Z]{1,23})')
+# MQTT Topic 正则规则
 MQTT_TOPIC_RE = re.compile(
     r'(?P<topic>(/(?=[^/]))?(?P<path>(?P<dir_name>[^+#/]+|\+)/)*(?P<end>#|\+|[^+#/]+))(?!.)',
     flags=re.DOTALL
@@ -71,11 +73,11 @@ MQTT_SUBACK_QoS1 = MQTT_QoS1
 MQTT_SUBACK_QoS2 = MQTT_QoS2
 MQTT_SUBACK_FAILURE = 0x80
 
-TOPIC_SEP = '/'
-TOPIC_BEGINNING_DOLLAR = '$'
-WILDCARD_SINGLE_LEVEL = '+'
-WILDCARD_MULTI_LEVEL = '#'
-MQTT_NONE_CHAR = b'\x00\x00'
+TOPIC_SEP = '/'               # topic分隔符
+TOPIC_BEGINNING_DOLLAR = '$'  # 美元符号
+WILDCARD_SINGLE_LEVEL = '+'   # 单层通配符
+WILDCARD_MULTI_LEVEL = '#'    # 多层级通配符
+MQTT_NONE_CHAR = b'\x00\x00'  # 空字符
 
 
 def remaining2list(remain, exception=False):
@@ -149,6 +151,7 @@ def get_remaining(buff, start_at=0, exception=False):
 
 
 def get_string(buff, exception=False):
+    """获取字符串"""
     if buff is None:
         if exception:
             raise TypeError('None not allowed')
@@ -184,6 +187,7 @@ def get_string(buff, exception=False):
 
 
 def gen_string(uni_str, exception=False):
+    """生成字符串"""
     if uni_str is None:
         if exception:
             raise TypeError('None not allowed')
@@ -215,6 +219,7 @@ def gen_string(uni_str, exception=False):
 
 
 def gen_client_id():
+    """生成随机client id"""
     rand = random.SystemRandom()
     client_id = ''
     for s in range(rand.randint(1, 23)):

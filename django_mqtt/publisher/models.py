@@ -135,11 +135,14 @@ class SecureConf(models.Model):
         password to decrypt it, Python will ask for the password at the command line.
 
         :var ciphers: is a string specifying which encryption ciphers are allowable for this connection,
-or None to use the defaults.
+        or None to use the defaults.
     """
+    # ca证书
     ca_certs = models.FileField(upload_to='ca', storage=private_fs)
     cert_reqs = models.IntegerField(choices=CERT_REQS, default=ssl.CERT_REQUIRED)
+    # tls 版本
     tls_version = models.IntegerField(choices=PROTO_SSL_VERSION, default=ssl.PROTOCOL_TLSv1)
+    # 证书文件
     certfile = models.FileField(upload_to='certs', storage=private_fs, blank=True, null=True)
     keyfile = models.FileField(upload_to='keys', storage=private_fs, blank=True, null=True)
     ciphers = models.CharField(max_length=1024, blank=True, null=True, default=None)

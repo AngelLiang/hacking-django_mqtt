@@ -6,6 +6,7 @@ from django_mqtt.models import ACL
 
 
 class ACLChangeForm(forms.ModelForm):
+    # 密码只读hash字段
     password = ReadOnlyPasswordHashField(
         label=_("Password"),
         help_text=_(

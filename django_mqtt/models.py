@@ -21,6 +21,7 @@ PROTO_MQTT_ACC = (
     (PROTO_MQTT_ACC_PUB, _('Publisher')),
 )
 
+# 是否允许 client id 为空
 ALLOW_EMPTY_CLIENT_ID = False
 if hasattr(settings, 'MQTT_ALLOW_EMPTY_CLIENT_ID'):
     ALLOW_EMPTY_CLIENT_ID = settings.MQTT_ALLOW_EMPTY_CLIENT_ID
@@ -38,14 +39,21 @@ class SecureSave(models.Model):
 
 class ClientId(SecureSave):
     name = models.CharField(max_length=23, db_index=True, blank=True, unique=True,
+                            # 添加验证器
                             validators=[ClientIdValidator(valid_empty=ALLOW_EMPTY_CLIENT_ID)])
+    # 与 user 模型是多对多关系
     users = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
+    # 用户组
     groups = models.ManyToManyField(Group, blank=True)
 
     def is_public(self):
+        """是否是公开的
+        当关联的 users 和 groups 为空时则表示是公开的
+        """
         return self.users.count() == 0 and self.groups.count() == 0
 
     def has_permission(self, user):
+        """是否有权限"""
         if not self.is_public():
             if user:
                 if self.users.filter(pk=user.pk):
@@ -67,9 +75,10 @@ class ClientId(SecureSave):
 
 
 class Topic(SecureSave):
+    # topic name
     name = models.CharField(max_length=1024, validators=[TopicValidator()], db_index=True, unique=True, blank=False)
-    wildcard = models.BooleanField(default=False)
-    dollar = models.BooleanField(default=False)
+    wildcard = models.BooleanField(default=False)  # 通配符
+    dollar = models.BooleanField(default=False)  # 美元符号
 
     def __unicode__(self):  # pragma: no cover
         return self.name
@@ -78,6 +87,8 @@ class Topic(SecureSave):
         return self.name
 
     def __eq__(self, other):
+        """判断 Topic 是否相等，other 可以是 Topic 类 或 字符串
+        """
         if isinstance(other, Topic):
             return self.name == other.name
         elif isinstance(other, six.string_types) or isinstance(other, six.text_type):
@@ -95,6 +106,7 @@ class Topic(SecureSave):
         return self in comp
 
     def __len__(self):
+        """长度"""
         return len(self.name)
 
     def __gt__(self, other):
@@ -107,12 +119,15 @@ class Topic(SecureSave):
         return False
 
     def is_wildcard(self):
+        """是否有通配符"""
         return WILDCARD_MULTI_LEVEL in self.name or WILDCARD_SINGLE_LEVEL in self.name
 
     def is_dollar(self):
+        """开头是否有美元符号"""
         return self.name.startswith(TOPIC_BEGINNING_DOLLAR)
 
     def __contains__(self, item):
+        """包含"""
         comp = None
         if isinstance(item, Topic):
             comp = item
@@ -181,6 +196,7 @@ class Topic(SecureSave):
         return candidates
 
     def __iter__(self):
+        """迭代"""
         if not self.is_wildcard():
             yield self
         else:
@@ -191,14 +207,15 @@ class Topic(SecureSave):
     def save(self, force_insert=False, force_update=False, using=None,
              update_fields=None):
         if not update_fields or 'wildcard' in update_fields:
-            self.wildcard = self.is_wildcard()
+            self.wildcard = self.is_wildcard()  # 如果有通配符自动设置
         if not update_fields or 'dollar' in update_fields:
-            self.dollar = self.is_dollar()
+            self.dollar = self.is_dollar()  # 如果有美元符号自动设置
         return super(Topic, self).save(force_insert=force_insert, force_update=force_update,
                                        using=using, update_fields=update_fields)
 
 
 class ACL(models.Model):
+    """访问控制列表"""
     allow = models.BooleanField(default=True)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE)  # There is many of acc options by topic
     acc = models.IntegerField(choices=PROTO_MQTT_ACC)
@@ -217,6 +234,9 @@ class ACL(models.Model):
         self._password = None
 
     def set_password(self, raw_password):
+        """
+        :param raw_password: str, 原始密码字符串
+        """
         self.password = make_password(raw_password)
         self._password = raw_password
 
@@ -291,6 +311,7 @@ class ACL(models.Model):
         return min(candidates)
 
     def is_public(self):
+        """是否是公开"""
         return self.users.count() == 0 and self.groups.count() == 0 and not self.password
 
     def has_permission(self, user=None, password=None):

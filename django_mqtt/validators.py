@@ -12,6 +12,7 @@ from django_mqtt.protocol import (
 
 @deconstructible
 class ClientIdValidator(object):
+    """ClientId验证器"""
     regex = MQTT_CLIENT_ID_RE
     message = _('Enter a valid value.')
     code = 'invalid'
@@ -40,6 +41,7 @@ client_id_validator = ClientIdValidator()
 
 @deconstructible
 class TopicValidator(object):
+    """主题验证器"""
     regex = MQTT_TOPIC_RE
     messages = {
         'only_wildcards': _('Only wildcards are allowed'),
