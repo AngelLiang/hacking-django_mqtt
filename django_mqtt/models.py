@@ -215,7 +215,7 @@ class Topic(SecureSave):
 
 
 class ACL(models.Model):
-    """访问控制列表"""
+    """访问控制表"""
     allow = models.BooleanField(default=True)
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE)  # There is many of acc options by topic
     acc = models.IntegerField(choices=PROTO_MQTT_ACC)

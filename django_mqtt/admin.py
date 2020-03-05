@@ -84,8 +84,8 @@ class AclAdmin(admin.ModelAdmin):
                          IS_POPUP_VAR in request.GET),
             'add': True,
             'change': False,
-            'has_delete_permission': False,
-            'has_change_permission': True,
+            'has_delete_permission': False,  # 没有删除权限
+            'has_change_permission': True,  # 有修改权限
             'has_absolute_url': False,
             'opts': self.model._meta,
             'original': acl,

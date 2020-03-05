@@ -219,6 +219,7 @@ class Client(models.Model):
         return "%s - %s" % (self.client_id, self.server)
 
     def get_mqtt_client(self, empty_client_id=False):
+        """获取 mqtt 客户端"""
         client_id = None
         clean = True
         if self.client_id:
@@ -277,6 +278,7 @@ class Data(models.Model):
         return "%s - %s - %s" % (self.payload, self.topic, self.client)
 
     def update_remote(self):
+        # 获取 mqtt 客户端
         cli = self.client.get_mqtt_client(empty_client_id=self.client.client_id is None)
         try:
             mqtt_connect.send(sender=Server.__class__, client=self.client)
@@ -284,8 +286,11 @@ class Data(models.Model):
             mqtt_pre_publish.send(sender=Data.__class__, client=self.client,
                                   topic=self.topic, payload=self.payload, qos=self.qos, retain=self.retain)
             (rc, mid) = cli.publish(self.topic.name, payload=self.payload, qos=self.qos, retain=self.retain)
+
+            # 设置服务器状态表并保存
             self.client.server.status = rc
             self.client.server.save()
+
             mqtt_publish.send(sender=Client.__class__, client=self.client, userdata=cli._userdata, mid=mid)
             cli.loop_write()
             if not self.client.clean_session and not self.client.client_id:
